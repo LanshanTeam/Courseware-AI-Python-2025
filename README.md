@@ -18,4 +18,5 @@ p.s.在学习期间，请大家一定快速熟悉《高等数学》各种导数�
 | 08   | 大模型微调项目实战-训练-部署-OpenCompass评估         | 情绪对话大模型数据集制作，微调，训练，部署，opencompass评估  | 刘浩宇 |
 | 09   | langchain的介绍与fastapi的使用                       | fastapi组件介绍，介绍python如何在后端进行逻辑处理。介绍langchain框架，进行基础的大模型框架式开发 | 张博为 |
 | 10   | 容器化部署与agent开发的展望                          | 学习docker容器，dify的使用。介绍Mcp。Rag技术的实现。发布寒假项目考核 | 刘浩宇 |
-        <img width="674" height="763" alt="Py蓝妹" src="https://github.com/user-attachments/assets/66a4b7f8-1351-48ce-baf2-ea50365b55a2" />
+<img width="674" height="763" alt="Py蓝妹" src="https://github.com/user-attachments/assets/c50f570e-b127-4fd1-979d-43da0edcd64f" />
+
