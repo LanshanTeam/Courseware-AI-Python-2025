@@ -452,3 +452,17 @@ xtuner convert pth_to_hf ${FINETUNE_CFG} ${PTH_PATH} ${SAVE_PATH}
 $ xtuner convert merge ${LLM} ${LLM_ADAPTER} ${SAVE_PATH}
 ```
 
+## 作业
+
+### L1
+
+跑通llamafactory的微调流程，自己微调一个模型（选型，大小，数据集皆不限），传个能展示效果的图就行
+
+### L2
+
+跑通xtuner的微调流程，也微调一个模型，要求同上
+
+**邮箱**：pine721@outlook.com
+
+**附上学号姓名**
+
