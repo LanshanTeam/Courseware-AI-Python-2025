@@ -1,0 +1,16 @@
+langchain
+langgraph
+langgraph-sdk
+langgraph-checkpoint-sqlite
+langsmith
+langchain-community
+langchain-core
+langchain-openai
+langchain-text-splitters
+jupyterlab
+python-dotenv
+lxml
+scikit-learn
+pandas
+pyarrow
+dashscope

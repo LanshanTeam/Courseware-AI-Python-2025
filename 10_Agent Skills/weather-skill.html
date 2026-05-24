@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Skill 开发指南 - Claude Code MCP</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .code-block {
+            background: #2d2d2d;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .copy-btn {
+            transition: all 0.2s;
+        }
+        .copy-btn:hover {
+            transform: scale(1.05);
+        }
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        pre[class*="language-"] {
+            margin: 0;
+            border-radius: 0 0 8px 8px;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg py-16 px-4">
+        <div class="max-w-4xl mx-auto text-center">
+            <div class="text-6xl mb-4">🌤️</div>
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">Weather Skill</h1>
+            <p class="text-xl text-purple-100">基于高德地图 MCP Server 的天气查询技能</p>
+            <div class="mt-6 flex justify-center gap-4 flex-wrap">
+                <span class="px-4 py-2 bg-white/20 rounded-full text-sm">Claude Code</span>
+                <span class="px-4 py-2 bg-white/20 rounded-full text-sm">MCP Protocol</span>
+                <span class="px-4 py-2 bg-white/20 rounded-full text-sm">高德地图 API</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-4 py-12">
+        <!-- 概述 -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
+                <span class="text-purple-400">📋</span> 概述
+            </h2>
+            <div class="bg-gray-800 rounded-lg p-6">
+                <p class="text-gray-300 leading-relaxed">
+                    本指南将帮助您创建一个名为 <code class="bg-gray-700 px-2 py-1 rounded">weather-skill</code> 的 Claude Code 技能，
+                    该技能通过调用高德地图的 MCP Server 来查询实时天气信息。Skills 是 Claude Code 的扩展能力，
+                    允许您定义可重用的提示词和工作流程。
+                </p>
+            </div>
+        </section>
+
+        <!-- 项目结构 -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
+                <span class="text-purple-400">📁</span> 项目结构
+            </h2>
+            <div class="code-block">
+                <div class="bg-gray-700 px-4 py-2 flex justify-between items-center">
+                    <span class="text-sm text-gray-300">目录结构</span>
+                </div>
+                <pre class="!bg-gray-800"><code class="language-bash">weather-skill/
+├── .claude/
+│   ├── settings.json          # MCP Server 配置
+│   └── skills/
+│       └── weather-skill.md   # 技能定义文件
+├── README.md
+└── package.json               # (可选) 项目配置</code></pre>
+            </div>
+        </section>
+
+        <!-- 开发步骤 -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                <span class="text-purple-400">🚀</span> 详细开发步骤
+            </h2>
+
+            <!-- Step 1 -->
+            <div class="mb-8">
+                <div class="flex gap-4 mb-4">
+                    <div class="step-number">1</div>
+                    <div>
+                        <h3 class="text-xl font-semibold">获取高德地图 API Key</h3>
+                        <p class="text-gray-400">前往高德开放平台注册并创建应用</p>
+                    </div>
+                </div>
+                <div class="ml-14 bg-gray-800 rounded-lg p-4">
+                    <ol class="list-decimal list-inside space-y-2 text-gray-300">
+                        <li>访问 <a href="https://lbs.amap.com/" target="_blank" class="text-purple-400 hover:underline">https://lbs.amap.com/</a></li>
+                        <li>注册/登录高德开放平台账号</li>
+                        <li>进入控制台 → 应用管理 → 创建新应用</li>
+                        <li>添加 Key，服务平台选择 "Web服务"</li>
+                        <li>复制生成的 API Key</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="mb-8">
+                <div class="flex gap-4 mb-4">
+                    <div class="step-number">2</div>
+                    <div>
+                        <h3 class="text-xl font-semibold">创建项目目录</h3>
+                        <p class="text-gray-400">初始化 weather-skill 项目结构</p>
+                    </div>
+                </div>
+                <div class="ml-14 code-block">
+                    <div class="bg-gray-700 px-4 py-2 flex justify-between items-center">
+                        <span class="text-sm text-gray-300">Terminal</span>
+                        <button class="copy-btn bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-sm" onclick="copyCode(this)">复制</button>
+                    </div>
+                    <pre class="!bg-gray-800"><code class="language-bash"># 创建项目目录
+mkdir -p weather-skill/.claude/skills
+cd weather-skill
+
+# 初始化项目 (可选)
+npm init -y</code></pre>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="mb-8">
+                <div class="flex gap-4 mb-4">
+                    <div class="step-number">3</div>
+                    <div>
+                        <h3 class="text-xl font-semibold">配置 MCP Server</h3>
+                        <p class="text-gray-400">在 .claude/settings.json 中配置高德地图 MCP</p>
+                    </div>
+                </div>
+                <div class="ml-14 code-block">
+                    <div class="bg-gray-700 px-4 py-2 flex justify-between items-center">
+                        <span class="text-sm text-gray-300">.claude/settings.json</span>
+                        <button class="copy-btn bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-sm" onclick="copyCode(this)">复制</button>
+                    </div>
+                    <pre class="!bg-gray-800"><code class="language-json">{
+  "mcpServers": {
+    "amap-maps": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@amap/amap-maps-mcp-server"
+      ],
+      "env": {
+        "AMAP_MAPS_API_KEY": "您的高德地图API_KEY"
+      }
+    }
+  }
+}</code></pre>
+                </div>
+                <div class="ml-14 mt-4 bg-yellow-900/30 border border-yellow-600 rounded-lg p-4">
+                    <p class="text-yellow-300 text-sm">
+                        ⚠️ <strong>注意：</strong>请将 <code>您的高德地图API_KEY</code> 替换为您在步骤1中获取的实际 API Key。
+                        建议使用环境变量来存储敏感信息。
+                    </p>
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="mb-8">
+                <div class="flex gap-4 mb-4">
+                    <div class="step-number">4</div>
+                    <div>
+                        <h3 class="text-xl font-semibold">创建 Weather Skill 文件</h3>
+                        <p class="text-gray-400">定义技能的 Markdown 文件</p>
+                    </div>
+                </div>
+                <div class="ml-14 code-block">
+                    <div class="bg-gray-700 px-4 py-2 flex justify-between items-center">
+                        <span class="text-sm text-gray-300">.claude/skills/weather-skill.md</span>
+                        <button class="copy-btn bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-sm" onclick="copyCode(this)">复制</button>
+                    </div>
+                    <pre class="!bg-gray-800"><code class="language-markdown">---
+name: weather-skill
+description: 通过高德地图 MCP Server 查询指定城市的实时天气信息
+version: 1.0.0
+author: Kevin
+tags:
+  - weather
+  - amap
+  - mcp
+---
+
+# Weather Skill
+
+## 触发词
+- 查询天气
+- 天气怎么样
+- weather
+- 今天天气
+
+## 使用方法
+
+当用户询问天气相关问题时，执行以下步骤：
+
+1. **解析城市名称**
+   - 从用户输入中提取城市名称
+   - 如果未指定城市，询问用户想查询哪个城市的天气
+
+2. **调用高德地图 MCP 工具**
+   - 使用 `maps_weather` 工具查询天气
+   - 参数：city（城市名称）
+
+3. **格式化输出结果**
+   - 城市名称
+   - 当前天气状况
+   - 温度（当前/最高/最低）
+   - 风向和风力
+   - 湿度
+   - 空气质量（如有）
+
+## 示例对话
+
+**用户**: 北京今天天气怎么样？
+
+**助手**: 让我为您查询北京的天气信息...
+
+🌤️ **北京市天气**
+- 天气：晴
+- 温度：25°C
+- 风向：东南风 2级
+- 湿度：45%
+- 空气质量：良
+
+## 错误处理
+
+- 如果城市名称无法识别，提示用户重新输入
+- 如果 API 调用失败，显示友好的错误信息
+- 建议用户检查网络连接或稍后重试
+
+## 依赖
+
+- 高德地图 MCP Server (`@amap/amap-maps-mcp-server`)
+- 有效的高德地图 API Key</code></pre>
+                </div>
+                <div class="ml-14 mt-4 bg-blue-900/30 border border-blue-600 rounded-lg p-4">
+                    <p class="text-blue-300 text-sm mb-2">
+                        📝 <strong>YAML Frontmatter 元数据说明：</strong>
+                    </p>
+                    <ul class="text-blue-200 text-sm space-y-1 list-disc list-inside">
+                        <li><code class="bg-gray-700 px-1 rounded">name</code>: 技能的唯一标识符</li>
+                        <li><code class="bg-gray-700 px-1 rounded">description</code>: 技能的简短描述</li>
+                        <li><code class="bg-gray-700 px-1 rounded">version</code>: 语义化版本号</li>
+                        <li><code class="bg-gray-700 px-1 rounded">author</code>: 作者信息</li>
+                        <li><code class="bg-gray-700 px-1 rounded">tags</code>: 分类标签，便于检索</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Step 5 -->
+            <div class="mb-8">
+                <div class="flex gap-4 mb-4">
+                    <div class="step-number">5</div>
+                    <div>
+                        <h3 class="text-xl font-semibold">创建 README 文档</h3>
+                        <p class="text-gray-400">添加项目说明文档</p>
+                    </div>
+                </div>
+                <div class="ml-14 code-block">
+                    <div class="bg-gray-700 px-4 py-2 flex justify-between items-center">
+                        <span class="text-sm text-gray-300">README.md</span>
+                        <button class="copy-btn bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-sm" onclick="copyCode(this)">复制</button>
+                    </div>
+                    <pre class="!bg-gray-800"><code class="language-markdown"># Weather Skill 🌤️
+
+基于高德地图 MCP Server 的 Claude Code 天气查询技能。
+
+## 功能特性
+
+- ✅ 查询全国城市实时天气
+- ✅ 显示温度、湿度、风力等详细信息
+- ✅ 支持自然语言查询
+- ✅ 友好的格式化输出
+
+## 安装步骤
+
+1. 克隆或复制本项目到您的工作目录
+2. 配置高德地图 API Key
+3. 在 Claude Code 中打开项目目录
+
+## 配置
+
+编辑 `.claude/settings.json`，填入您的 API Key：
+
+```json
+{
+  "mcpServers": {
+    "amap": {
+      "command": "npx",
+      "args": ["-y", "@amap/amap-maps-mcp-server"],
+      "env": {
+        "AMAP_MAPS_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+## 使用方法
+
+在 Claude Code 中直接询问：
+- "北京天气怎么样？"
+- "查询上海的天气"
+- "深圳今天会下雨吗？"
+
+## License
+
+MIT</code></pre>
+                </div>
+            </div>
+
+            <!-- Step 6 -->
+            <div class="mb-8">
+                <div class="flex gap-4 mb-4">
+                    <div class="step-number">6</div>
+                    <div>
+                        <h3 class="text-xl font-semibold">安装并使用技能</h3>
+                        <p class="text-gray-400">在 Claude Code 中启用并测试</p>
+                    </div>
+                </div>
+                <div class="ml-14 code-block">
+                    <div class="bg-gray-700 px-4 py-2 flex justify-between items-center">
+                        <span class="text-sm text-gray-300">Terminal - 在 Claude Code 中使用</span>
+                        <button class="copy-btn bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-sm" onclick="copyCode(this)">复制</button>
+                    </div>
+                    <pre class="!bg-gray-800"><code class="language-bash"># 方法1: 直接在项目目录中启动 Claude Code
+cd weather-skill
+claude
+
+# 方法2: 使用 claude 命令打开项目
+claude weather-skill/
+
+# 启动后，直接询问天气：
+# > 北京今天天气怎么样？
+# > 查询深圳的天气</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- 完整文件内容 -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                <span class="text-purple-400">📄</span> 一键创建脚本
+            </h2>
+            <div class="code-block">
+                <div class="bg-gray-700 px-4 py-2 flex justify-between items-center">
+                    <span class="text-sm text-gray-300">setup-weather-skill.sh</span>
+                    <button class="copy-btn bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-sm" onclick="copyCode(this)">复制</button>
+                </div>
+                <pre class="!bg-gray-800"><code class="language-bash">#!/bin/bash
+
+# 创建目录结构
+mkdir -p weather-skill/.claude/skills
+cd weather-skill
+
+# 创建 settings.json
+cat > .claude/settings.json << 'EOF'
+{
+  "mcpServers": {
+    "amap-maps": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@amap/amap-maps-mcp-server"
+      ],
+      "env": {
+        "AMAP_MAPS_API_KEY": "${AMAP_API_KEY}"
+      }
+    }
+  }
+}
+EOF
+
+# 创建 weather-skill.md
+cat > .claude/skills/weather-skill.md << 'EOF'
+---
+name: weather-skill
+description: 通过高德地图 MCP Server 查询指定城市的实时天气信息
+version: 1.0.0
+author: Your Name
+tags:
+  - weather
+  - amap
+  - mcp
+---
+
+# Weather Skill
+
+## 使用方法
+
+当用户询问天气时：
+
+1. 从用户输入中提取城市名称
+2. 调用 `maps_weather` 工具
+3. 格式化并展示天气信息
+
+## 输出格式
+
+🌤️ **{城市}天气**
+- 天气：{状况}
+- 温度：{温度}°C
+- 风向：{风向} {风力}
+- 湿度：{湿度}%
+EOF
+
+# 创建 README
+cat > README.md << 'EOF'
+# Weather Skill 🌤️
+
+Claude Code 天气查询技能，基于高德地图 MCP。
+
+## 使用前配置
+
+设置环境变量：
+```bash
+export AMAP_MAPS_API_KEY="your_api_key"
+```
+
+## 使用
+
+在 Claude Code 中询问天气即可。
+EOF
+
+echo "✅ Weather Skill 创建完成！"
+echo "📝 请设置环境变量: export AMAP_MAPS_API_KEY='your_key'"
+echo "🚀 启动: cd weather-skill && claude"</code></pre>
+            </div>
+        </section>
+
+        <!-- 使用演示 -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                <span class="text-purple-400">🎬</span> 使用演示
+            </h2>
+            <div class="bg-gray-800 rounded-lg p-6">
+                <div class="space-y-4">
+                    <div class="flex gap-3">
+                        <span class="text-blue-400 font-mono">User:</span>
+                        <span class="text-gray-300">北京今天天气怎么样？</span>
+                    </div>
+                    <div class="flex gap-3">
+                        <span class="text-green-400 font-mono">Claude:</span>
+                        <div class="text-gray-300">
+                            <p class="mb-2">让我为您查询北京的天气信息...</p>
+                            <div class="bg-gray-700 rounded-lg p-4 mt-2">
+                                <p class="font-semibold text-lg mb-2">🌤️ 北京市天气</p>
+                                <ul class="space-y-1 text-sm">
+                                    <li>• 天气：晴转多云</li>
+                                    <li>• 温度：26°C（最高32°C / 最低21°C）</li>
+                                    <li>• 风向：东南风 2级</li>
+                                    <li>• 湿度：48%</li>
+                                    <li>• 空气质量：良 (AQI 68)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 常见问题 -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                <span class="text-purple-400">❓</span> 常见问题
+            </h2>
+            <div class="space-y-4">
+                <div class="bg-gray-800 rounded-lg p-4">
+                    <h4 class="font-semibold text-purple-300 mb-2">Q: MCP Server 连接失败？</h4>
+                    <p class="text-gray-400 text-sm">确保已安装 Node.js 和 npm，并检查 API Key 是否正确配置。</p>
+                </div>
+                <div class="bg-gray-800 rounded-lg p-4">
+                    <h4 class="font-semibold text-purple-300 mb-2">Q: 如何使用环境变量存储 API Key？</h4>
+                    <p class="text-gray-400 text-sm">在 shell 配置文件中添加 <code class="bg-gray-700 px-1 rounded">export AMAP_MAPS_API_KEY="your_key"</code>，然后在 settings.json 中使用 <code class="bg-gray-700 px-1 rounded">${AMAP_MAPS_API_KEY}</code>。</p>
+                </div>
+                <div class="bg-gray-800 rounded-lg p-4">
+                    <h4 class="font-semibold text-purple-300 mb-2">Q: 技能没有被识别？</h4>
+                    <p class="text-gray-400 text-sm">确保 .md 文件位于 <code class="bg-gray-700 px-1 rounded">.claude/skills/</code> 目录下，并重启 Claude Code。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 相关资源 -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                <span class="text-purple-400">🔗</span> 相关资源
+            </h2>
+            <div class="grid md:grid-cols-2 gap-4">
+                <a href="https://lbs.amap.com/" target="_blank" class="bg-gray-800 rounded-lg p-4 hover:bg-gray-700 transition-colors">
+                    <h4 class="font-semibold text-purple-300 mb-1">高德开放平台</h4>
+                    <p class="text-gray-400 text-sm">获取 API Key 和查看接口文档</p>
+                </a>
+                <a href="https://github.com/anthropics/anthropic-cookbook" target="_blank" class="bg-gray-800 rounded-lg p-4 hover:bg-gray-700 transition-colors">
+                    <h4 class="font-semibold text-purple-300 mb-1">Anthropic Cookbook</h4>
+                    <p class="text-gray-400 text-sm">更多 Claude 使用示例</p>
+                </a>
+                <a href="https://modelcontextprotocol.io/" target="_blank" class="bg-gray-800 rounded-lg p-4 hover:bg-gray-700 transition-colors">
+                    <h4 class="font-semibold text-purple-300 mb-1">MCP 协议文档</h4>
+                    <p class="text-gray-400 text-sm">了解 Model Context Protocol</p>
+                </a>
+                <a href="https://www.npmjs.com/package/@amap/amap-maps-mcp-server" target="_blank" class="bg-gray-800 rounded-lg p-4 hover:bg-gray-700 transition-colors">
+                    <h4 class="font-semibold text-purple-300 mb-1">高德地图 MCP Server</h4>
+                    <p class="text-gray-400 text-sm">NPM 包文档和更新日志</p>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800 py-8 text-center text-gray-500">
+        <p>Weather Skill 开发指南 | Built for Claude Code</p>
+    </footer>
+
+    <script>
+        function copyCode(button) {
+            const codeBlock = button.closest('.code-block').querySelector('code');
+            const text = codeBlock.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = button.textContent;
+                button.textContent = '已复制!';
+                button.classList.add('bg-green-600');
+                button.classList.remove('bg-purple-600');
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('bg-green-600');
+                    button.classList.add('bg-purple-600');
+                }, 2000);
+            });
+        }
+
+        // Highlight code on load
+        document.addEventListener('DOMContentLoaded', () => {
+            Prism.highlightAll();
+        });
+    </script>
+</body>
+</html>
